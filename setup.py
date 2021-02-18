@@ -1,10 +1,12 @@
 #!/usr/bin/env/python
 
-from distutils.core import setup
+import setuptools
 
-setup(name="clossh",
+setuptools.setup(
+      name="clossh-MetallicSquid",
       version="0.1.0",
       description="A simple and lightweight clustering library based on the ssh protocol.",
       author="Guillaume Macneil",
       url="https://github.com/MetallicSquid/clossh",
-      packages=["control"])
+      packages=setuptools.find_packages(),
+)
