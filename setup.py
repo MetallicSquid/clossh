@@ -9,4 +9,9 @@ setuptools.setup(
       author="Guillaume Macneil",
       url="https://github.com/MetallicSquid/clossh",
       packages=setuptools.find_packages(),
+      classifiers=[
+            "Programming Language :: Python :: 3",
+            "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+            "Operating System :: Unix",
+      ],
 )
