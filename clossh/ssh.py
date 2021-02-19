@@ -72,11 +72,8 @@ def authorize_controller(node, pub_key_path=None, ssh_path=None):
     key = ""
     if pub_key_path == None:
         pub_key_path = os.path.join(os.environ["HOME"], ".ssh", "id_rsa.pub")
-        with open(pub_key_path, "r") as pub_file:
-            key = pub_file.read()
-    else:
-        with open(pub_key_path, "r") as pub_file:
-            key = pub_file.read()
+    with open(pub_key_path, "r") as pub_file:
+        key = pub_file.read()
 
     if ssh_path == None:
         home = node.client.exec_command("echo $HOME")[1]
