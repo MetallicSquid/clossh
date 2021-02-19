@@ -1,7 +1,6 @@
 ##### SSH Handling #####
 import os
 import paramiko as pk
-from control.controller import Node
 
 def generate_rsa(key_password=None, key_path=None, bits=1024):
     """
