@@ -57,6 +57,65 @@ def generate_dss(key_password=None, key_path=None, bits=1024):
         public_file.write(f"{public.get_name()} {public.get_base64()}")
     print("... DSS key pair generated!")
 
+def generate_ecdsa(key_password=None, key_path=None, bits=521):
+		"""
+        Generate ECDSA key pair on the controller, at a specified directory.
+
+        Parameters
+        ---------
+        key_password: str
+            Password to be assigned to the ECDSA key pair.
+        key_path: str
+            Path of the file allocated to the ECDSA key pair.
+        bits: int
+            The number of bits to generate the ECDSA key pair with."""
+		if key_path == None:
+				key_directory = os.path.join(os.environ["HOME"], ".ssh/")
+				key_path = os.path.join(key_directory, "id_ecdsa")
+		else:
+				key_directory = os.path.dirname(key_path)
+		
+		if bits != 256 or bits != 384 or bits != 521:
+				print("ECDSA keys can only take sizes of 256, 384 or 521 bits. Defaulting to 521 bits.")
+				bits = 521
+	
+		print(f"Generating private & public ECDSA key pair, with {bits} at `{key_path}` and `{key_path}.pub` respectively...\n")
+		os.system(f"mkdir {key_directory}")
+		private = pk.ECDSAKey.generate(bits=bits)
+		private.write_private_key(key_path, password=key_password)
+		public = pk.ECDSAKey(filename=key_path, password=key_password)
+		with open(f"{key_path}.pub", "w") as public_file:
+				public_file.write(f"{public.get_name()} {public.get_base64()}")
+		print("... ECDSA key pair generated!")
+
+def generate_ed25519(key_password=None, key_path=None, bits=1024):
+    """
+        Generate DSS key pair on the controller, at a specified directory.
+
+        Parameters
+        ---------
+        key_password: str
+            Password to be assigned to the ED25519 key pair.
+        key_path: str
+            Path of the file allocated to the ED25519 key pair.
+        bits: int
+            The number of bits to generate the ED25519 key pair with."""
+    if key_path == None:
+        key_directory = os.path.join(os.environ["HOME"], ".ssh/")
+        key_path = os.path.join(key_directory, "id_ed25519")
+    else:
+        key_directory = os.path.dirname(key_path)
+
+    print(f"Generating private & public ED25519 key pair, with {bits} bits at `{key_path}` and `{key_path}.pub` respectively...\n")
+    os.system(f"mkdir {key_directory}")
+    private = pk.Ed25519Key.generate(bits=bits)
+    private.write_private_key_file(key_path, password=key_password)
+    public = pk.Ed25519Key(filename=key_path, password=key_password)
+    with open(f"{key_path}.pub", "w") as public_file:
+        public_file.write(f"{public.get_name()} {public.get_base64()}")
+    print("... ED25519 key pair generated!")
+
+
 def authorize_controller(node, pub_key_path=None, ssh_path=None):
     """
         Add the controller's public key to the .ssh/authorized_keys file in a given Node.
