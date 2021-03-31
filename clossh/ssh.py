@@ -75,7 +75,7 @@ def generate_ecdsa(key_password=None, key_path=None, bits=521):
 		else:
 				key_directory = os.path.dirname(key_path)
 		
-		if bits != 256 or bits != 384 or bits != 521:
+		if bits != 256 and bits != 384 and bits != 521:
 				print("ECDSA keys can only take sizes of 256, 384 or 521 bits. Defaulting to 521 bits.")
 				bits = 521
 	
