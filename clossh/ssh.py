@@ -58,7 +58,7 @@ def generate_dss(key_password=None, key_path=None, bits=1024):
     print("... DSS key pair generated!")
 
 def generate_ecdsa(key_password=None, key_path=None, bits=521):
-	"""
+    """
         Generate ECDSA key pair on the controller, at a specified directory.
 
         Parameters
@@ -69,24 +69,24 @@ def generate_ecdsa(key_password=None, key_path=None, bits=521):
             Path of the file allocated to the ECDSA key pair.
         bits: int
             The number of bits to generate the ECDSA key pair with."""
-	if key_path == None:
-		key_directory = os.path.join(os.environ["HOME"], ".ssh/")
-		key_path = os.path.join(key_directory, "id_ecdsa")
-	else:
-		key_directory = os.path.dirname(key_path)
+    if key_path == None:
+        key_directory = os.path.join(os.environ["HOME"], ".ssh/")
+        key_path = os.path.join(key_directory, "id_ecdsa")
+    else:
+        key_directory = os.path.dirname(key_path)
 		
-	if bits != 256 and bits != 384 and bits != 521:
-		print("ECDSA keys can only take sizes of 256, 384 or 521 bits. Defaulting to 521 bits.")
-		bits = 521
+    if bits != 256 and bits != 384 and bits != 521:
+        print("ECDSA keys can only take sizes of 256, 384 or 521 bits. Defaulting to 521 bits.")
+        bits = 521
 	
-	print(f"Generating private & public ECDSA key pair, with {bits} at `{key_path}` and `{key_path}.pub` respectively...\n")
-	os.system(f"mkdir {key_directory}")
-	private = pk.ECDSAKey.generate(bits=bits)
-	private.write_private_key(key_path, password=key_password)
-	public = pk.ECDSAKey(filename=key_path, password=key_password)
-	with open(f"{key_path}.pub", "w") as public_file:
-		public_file.write(f"{public.get_name()} {public.get_base64()}")
-	print("... ECDSA key pair generated!")
+    print(f"Generating private & public ECDSA key pair, with {bits} at `{key_path}` and `{key_path}.pub` respectively...\n")
+    os.system(f"mkdir {key_directory}")
+    private = pk.ECDSAKey.generate(bits=bits)
+    private.write_private_key(key_path, password=key_password)
+    public = pk.ECDSAKey(filename=key_path, password=key_password)
+    with open(f"{key_path}.pub", "w") as public_file:
+        public_file.write(f"{public.get_name()} {public.get_base64()}")
+    print("... ECDSA key pair generated!")
 
 def generate_ed25519(key_password=None, key_path=None, bits=1024):
     """
@@ -139,5 +139,9 @@ def authorize_controller(node, pub_key_path=None, ssh_path=None):
         ssh_path = os.path.join(home.read().decode('utf-8').replace("\n", ""), ".ssh/")
         auth_path = os.path.join(ssh_path, "authorized_keys")
 
+    _mkdir_ssh_path = node.client.exec_command(f"mkdir {ssh_path}")
+    print(_mkdir_ssh_path[1].read().decode('utf-8'), "    ", _mkdir_ssh_path[2].read().decode('utf-8') )
     _touch_auth_keys = node.client.exec_command(f"touch {auth_path}")
+    print(_touch_auth_keys[1].read().decode('utf-8'), "    ", _touch_auth_keys[2].read().decode('utf-8') )
     _echo_auth_keys = node.client.exec_command(f"echo '{key}' >> {auth_path}")
+    print(_echo_auth_keys[1].read().decode('utf-8') , "    ", _echo_auth_keys[2].read().decode('utf-8') )
