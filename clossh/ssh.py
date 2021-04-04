@@ -140,8 +140,5 @@ def authorize_controller(node, pub_key_path=None, ssh_path=None):
         auth_path = os.path.join(ssh_path, "authorized_keys")
 
     _mkdir_ssh_path = node.client.exec_command(f"mkdir {ssh_path}")
-    print(_mkdir_ssh_path[1].read().decode('utf-8'), "    ", _mkdir_ssh_path[2].read().decode('utf-8') )
     _touch_auth_keys = node.client.exec_command(f"touch {auth_path}")
-    print(_touch_auth_keys[1].read().decode('utf-8'), "    ", _touch_auth_keys[2].read().decode('utf-8') )
     _echo_auth_keys = node.client.exec_command(f"echo '{key}' >> {auth_path}")
-    print(_echo_auth_keys[1].read().decode('utf-8') , "    ", _echo_auth_keys[2].read().decode('utf-8') )

@@ -1,7 +1,7 @@
 import os
 import getpass
 from clossh.controller import Node
-from clossh.ssh import generate_rsa, generate_dss, authorize_controller
+from clossh.ssh import generate_rsa, generate_dss, generate_ecdsa, generate_ed25519, authorize_controller
 
 def setup_cluster_ssh():
     """
@@ -10,7 +10,7 @@ def setup_cluster_ssh():
         THIS IS A WIP, USE AT YOUR OWN PERIL!"""
     controller_status = input("Does the controller (this machine) currently have a valid SSH key pair? (y/N): ").lower()
     if controller_status == "" or controller_status == "n":
-        key_pair_type = input("What SSH key pair algorithm do you want to use? ([R]sa/[d]ss): ").lower()
+        key_pair_type = input("What SSH key pair algorithm do you want to use? ([R]sa/[d]ss/[ec]dsa/[ed]25519): ").lower()
         key_bits = int(input("How many bits would you like your key pair to have? (1024 by default): "))
         ssh_path = input("Where do you want the .ssh directory to be? (~/.ssh by default): ")
         key_password = getpass.getpass("What password would you like your key pair to have? (leave blank for none): ")
@@ -34,6 +34,20 @@ def setup_cluster_ssh():
             key_path = os.path.join(ssh_path, "id_dsa")
             if verify == "" or verify == "y":
                 generate_dss(key_password, key_path, key_bits)
+            else:
+                exit()
+        elif key_pair_type == "ec":
+            verify = input(f"Making an ECDSA key pair at {ssh_path} on the controller (this machine). Is this ok? (Y/n)").lower()
+            key_path = os.path.join(ssh_path, "id_ecdsa")
+            if verify == "" or verify == "y":
+                generate_ecdsa(key_password, key_path, key_bits)
+            else:
+                exit()
+        elif key_pair_type == "ed":
+            verify = input(f"Making an ED25519 key pair at {ssh_path} on the controller (this machine). Is this ok? (Y/n)").lower()
+            key_path = os.path.join(ssh_path, "id_ed25519")
+            if verify == "" or verify == "y":
+                generate_ed25519(key_password, key_path, key_bits)
             else:
                 exit()
         else:
