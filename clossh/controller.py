@@ -14,7 +14,7 @@ class Task():
         -------
         process()
             Runs the script (specified by script_path) on the Node. """
-    def __init__(self, node, script_path, inputs=None):
+    def __init__(self, node, inputs=None):
         """
             Sets up the command to be run by the Task.
 
@@ -27,18 +27,33 @@ class Task():
             inputs: list
                 The variable(s) to be passed to the script. """
         self.node = node
-        if inputs == None:
-            self.command = f'python3 {script_path}'
-        else:
-            self.command = f'python3 {script_path} "{inputs}"'
 
-    def process(self):
+    def script_process(self, script_path):
         """
             Runs the script (specified by script_path) on the Node.
 
             Returns a tuple containing the script's output in the form (stdin, stdout, stderr). """
-        stdin, stdout, stderr = self.node.client.exec_command(self.command)
+        
+        if inputs == None:
+            command = f'python3 {script_path}'
+        else:
+            command = f'python3 {script_path} "{inputs}"'
+
+        stdin, stdout, stderr = self.node.client.exec_command(command)
         return (stdin, stdout, stderr)
+
+    def function_process(self, function):
+        """
+            Runs a local function on the Node.
+
+            Returns a tuple containing the function's output in the form (stdin, stdout, stderr). """
+
+        # I can see a few different methods for achieving this:
+        #   *   Converting the function to text and passing the function directly into the python3 interpreter on the node with some boilerplate around it
+        #   *   Converting the function to text and making a script with some boilerplate in the /tmp directory
+        # Though I'm leaning towards the first one, I'm not fond of either of them
+
+        pass
 
 
 ### Node Class ###
@@ -63,8 +78,9 @@ class Node():
             hostname: str
                 The Node's hostname (necessary to establish SSH / SFTP).
             password: str
-                The Node's password (necessary to establish SSH / SFTP). <== Need to implement keys """
+                The Node's password (necessary to establish SSH / SFTP). """
         client = pk.SSHClient()
+        client.load_system_host_keys()
         client.set_missing_host_key_policy(pk.WarningPolicy)
         client.connect(hostname=hostname, username=username, password=password)
         self.client = client
