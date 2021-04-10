@@ -28,7 +28,7 @@ class Task():
                 The variable(s) to be passed to the script. """
         self.node = node
 
-    def script_process(self, script_path):
+    def node_process(self, node_path):
         """
             Runs the script (specified by script_path) on the Node.
 
@@ -42,19 +42,15 @@ class Task():
         stdin, stdout, stderr = self.node.client.exec_command(command)
         return (stdin, stdout, stderr)
 
-    def function_process(self, function):
+    def control_process(self, control_path):
         """
-            Runs a local function on the Node.
+            Runs a local (on the control node) script on the Node.
 
-            Returns a tuple containing the function's output in the form (stdin, stdout, stderr). """
+            Returns a tuple containing the script's output in the form (stdin, stdout, stderr). """
+        
 
-        # I can see a few different methods for achieving this:
-        #   *   Converting the function to text and passing the function directly into the python3 interpreter on the node with some boilerplate around it
-        #   *   Converting the function to text and making a script with some boilerplate in the /tmp directory
-        # Though I'm leaning towards the first one, I'm not fond of either of them
-
+        node.control_node_copy(node.sftp, control_path, to_path) 
         pass
-
 
 ### Node Class ###
 class Node():
@@ -79,6 +75,8 @@ class Node():
                 The Node's hostname (necessary to establish SSH / SFTP).
             password: str
                 The Node's password (necessary to establish SSH / SFTP). """
+        self.username = username
+        self.hostname = hostname
         client = pk.SSHClient()
         client.load_system_host_keys()
         client.set_missing_host_key_policy(pk.WarningPolicy)
@@ -98,11 +96,26 @@ class Node():
                 The path of the file / directory to be transferred from.
             to_path: str
                 The destination path for the file / directory to be transferred to. """
-        if os.path.exists(from_path) and os.path.exists(to_path) and os.path.isfile(from_path) and os.path.isfile(to_path):
-            sftp_client.get(from_path, to_path)
-        elif os.path.exists(from_path) and os.path.exists(to_path) and os.path.isdir(from_path) and os.path.isdir(to_path):
-            for file_name in sftp_client.listdir(from_path):
-                sftp_client.get(from_path+file_name, to_path+file_name)
+        from_path_exist_check = self.client.exec_command("ls {from_path}")
+        print("TEST - From path:", from_path_exist_check)
+        from_path_exists = True
+        if from_path_exist_check == None:
+            raise OSError(f"Path {from_path} does not exist on node ({self.username}@{self.hostname})")
+
+        from_path_is_file = True
+        if from_path[-1] == "/":
+            from_path_is_file = False
+
+        if os.path.exists(to_path):
+            if from_path_is_file and os.path.isfile(to_path):
+                sftp_client.get(from_path, to_path)
+            elif not from_path_is_file and os.path.isdir(to_path):
+                for file_name in sftp_client.listdir(from_path):
+                    sftp_client.get(from_path+file_name, to_path+file_name)
+            else:
+                raise OSError(f"Path type for either {from_path} or {to_path} is ambiguous")
+        else:
+            raise OSError(f"Path {to_path} does not exist")
 
     def control_node_copy(self, sftp_client, from_path, to_path):
         """
@@ -116,11 +129,48 @@ class Node():
                 The path of the file / directory to be transferred from.
             to_path: str
                 The destination path for the file / directory to be transferred to. """
-        if os.path.exists(from_path) and os.path.exists(to_path) and os.path.isfile(from_path) and os.path.isfile(to_path):
-            sftp_client.put(from_path, to_path)
-        elif os.path.exists(from_path) and os.path.exists(to_path) and os.path.isdir(from_path) and os.path.isdir(to_path):
-            for file_name in sftp_client.listdir(from_path):
-                sftp_client.put(from_path+file_name, to_path+file_name)
+        to_path_exist_check = self.client.exec_command("ls {to_path}")[2]
+        print("TEST - To path: ", to_path_exist_check)
+        to_path_exists = True
+        if to_path_exist_check == None:
+            raise OSError(f"Path {to_path} does not exist on node ({self.username}@{self.hostname})")
+        
+        to_path_is_file = True
+        if to_path[-1] == "/":
+            to_path_is_file = False
+
+        if os.path.exists(from_path):
+            if os.path.isfile(from_path) and to_path_is_file: 
+                sftp_client.put(from_path, to_path)
+            elif os.path.isdir(from_path) and not to_path_is_file:
+                for file_name in sftp_client.listdir(from_path):
+                    sftp_client.put(from_path+file_name, to_path+file_name)
+            else:
+                raise OSError(f"Path type for either {from_path} or {to_path} is ambiguous")
+        else:
+            raise OSError(f"Path {from_path} does not exist")
+
+    def find_safe_node_path(self, from_path, target_dir):
+        """
+        Find a safe (non-conflicting) path in the target_dir to copy a file to a Node from the controller.
+
+        Parameters
+        ----------
+        from_path: str
+            The path of the file to be tranferred.
+        target_dir: str
+            The target directory within which the file is to be copied to. """
+        if not os.path.exists(from_path):
+           raise OSError(f"Path {from_path} does not exist")
+        
+        ls_target_dir = self.client.exec_command("ls {target_dir}")[2]
+        print("TEST - Target dir: ", target_dir_exist_check)
+        target_dir_exists = True
+        if ls_target_dir == None:
+            raise OSError(f"Directory {target_dir} does not exist")
+
+        original_filename = os.path.basename(from_path)
+        print(original_filename)
 
 
 ### Cluster Class ###

@@ -1,16 +1,22 @@
 ##### File for testing new functionality #####
 
-# Working on simplified key authentification
 import paramiko as pk
 from clossh.controller import Task, Node, Cluster
 
-node = Node("pi", "server", "gCm2816R")
+cluster = Cluster(Node("pi", "compute1"), Node("pi", "compute2"), Node("pi", "compute3"))
 
-client = pk.SSHClient()
+class CopyNode(Node):
+    def copy_task():
+        print("Testing Control -> Node Copy...")
+        self.control_node_copy(self.sftp, "~/server.txt", "~/server.txt")
+        print("...Control -> Node Copy Successful")
+        print("Testing Node -> Control Copy...")
+        if self.hostname == "compute1":
+            self.node_control_copy(self.sftp, "~/compute1.txt", "~/compute1.txt")
+        elif self.hostname == "compute2":
+            self.node_control_copy(self.sftp, "~/compute2.txt", "~/compute2.txt")
+        else:
+            self.node_control_copy(self.sftp, "~/compute3.txt", "~/compute3.txt")
+        print("...Node -> Control Copy Successful")
 
-system_keys = node.client.load_system_host_keys()
-host_keys = node.client.get_host_keys()
-
-print(system_keys)
-print(host_keys)
-
+cluster.equal_distribute([], CopyNode.copy_task)
